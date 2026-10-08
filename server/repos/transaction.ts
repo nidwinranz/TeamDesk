@@ -1,8 +1,15 @@
+import type { Prisma } from '@prisma/client';
 import { prisma, type Tx } from '@/server/lib/prisma';
 
 export type { Tx };
 
-/** Runs `fn` in an interactive transaction; services use this instead of touching Prisma directly. */
-export function transaction<T>(fn: (tx: Tx) => Promise<T>): Promise<T> {
-  return prisma.$transaction((tx) => fn(tx));
+/**
+ * Runs `fn` in an interactive transaction; services use this instead of touching Prisma directly.
+ * Pass `isolationLevel: 'Serializable'` for invariants that span rows (e.g. "keep one OWNER").
+ */
+export function transaction<T>(
+  fn: (tx: Tx) => Promise<T>,
+  options?: { isolationLevel?: Prisma.TransactionIsolationLevel },
+): Promise<T> {
+  return prisma.$transaction((tx) => fn(tx), options);
 }
