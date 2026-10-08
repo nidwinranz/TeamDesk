@@ -20,11 +20,14 @@ async function ip() {
 }
 
 export async function signUpAction(_prev: ActionState, form: FormData): Promise<ActionState> {
+  let result: Awaited<ReturnType<typeof authService.signUp>>;
   try {
-    await authService.signUp(Object.fromEntries(form), { ip: await ip() });
+    result = await authService.signUp(Object.fromEntries(form), { ip: await ip() });
   } catch (err) {
     return toActionState(err);
   }
+  if (result.status === 'joined')
+    redirect(`/login?joined=1&callbackUrl=${encodeURIComponent(`/${result.orgSlug}`)}`);
   const email = form.get('email');
   redirect(`/verify?sent=1&email=${encodeURIComponent(typeof email === 'string' ? email : '')}`);
 }

@@ -20,6 +20,7 @@ export const metadata: Metadata = { title: 'Log in' };
 const NOTICES: Record<string, string> = {
   verified: 'Email verified. You can log in now.',
   reset: 'Password updated. Log in with your new password.',
+  joined: 'Account created and invite accepted. Log in to open your workspace.',
 };
 
 export default async function LoginPage({

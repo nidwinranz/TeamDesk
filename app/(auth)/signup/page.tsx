@@ -14,18 +14,27 @@ import { googleEnabled } from '@/server/auth';
 
 export const metadata: Metadata = { title: 'Sign up' };
 
-export default function SignUpPage() {
+export default async function SignUpPage({
+  searchParams,
+}: {
+  searchParams: Promise<Record<string, string | undefined>>;
+}) {
+  const { invite, email } = await searchParams;
   return (
     <Card>
       <CardHeader>
         <CardTitle>
-          <h1>Create your workspace</h1>
+          <h1>{invite ? 'Create your account' : 'Create your workspace'}</h1>
         </CardTitle>
-        <CardDescription>Free for up to 5 members and 3 projects.</CardDescription>
+        <CardDescription>
+          {invite
+            ? 'You will join the workspace you were invited to.'
+            : 'Free for up to 5 members and 3 projects.'}
+        </CardDescription>
       </CardHeader>
       <CardContent className="grid gap-4">
-        <SignUpForm />
-        {googleEnabled && <GoogleButton callbackUrl="/onboarding" />}
+        <SignUpForm inviteToken={invite} email={email} />
+        {googleEnabled && !invite && <GoogleButton callbackUrl="/onboarding" />}
       </CardContent>
       <CardFooter className="text-muted-foreground text-sm">
         Already have an account?&nbsp;

@@ -7,7 +7,7 @@ import { FormMessage } from '@/components/forms/form-message';
 import { SubmitButton } from '@/components/forms/submit-button';
 import { initialActionState } from '@/lib/action-state';
 
-export function SignUpForm() {
+export function SignUpForm({ inviteToken, email }: { inviteToken?: string; email?: string }) {
   const [state, action] = useActionState(signUpAction, initialActionState);
   const e = state.fieldErrors ?? {};
   return (
@@ -20,6 +20,7 @@ export function SignUpForm() {
         type="email"
         autoComplete="email"
         required
+        defaultValue={email}
         errors={e.email}
       />
       <Field
@@ -32,13 +33,17 @@ export function SignUpForm() {
         hint="At least 10 characters."
         errors={e.password}
       />
-      <Field
-        name="orgName"
-        label="Workspace name"
-        placeholder="Acme Studio"
-        required
-        errors={e.orgName}
-      />
+      {inviteToken ? (
+        <input type="hidden" name="inviteToken" value={inviteToken} />
+      ) : (
+        <Field
+          name="orgName"
+          label="Workspace name"
+          placeholder="Acme Studio"
+          required
+          errors={e.orgName}
+        />
+      )}
       <SubmitButton className="w-full">Create account</SubmitButton>
     </form>
   );

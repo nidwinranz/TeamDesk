@@ -10,7 +10,7 @@ import {
 import { generateToken, hashToken } from '@/server/lib/crypto';
 import { env } from '@/server/lib/env';
 import { resetPasswordTemplate, verifyEmailTemplate } from '@/server/lib/email-templates';
-import { AppError, badRequest } from '@/server/lib/errors';
+import { AppError, badRequest, validationFailed } from '@/server/lib/errors';
 import { logger } from '@/server/lib/logger';
 import { sendEmail } from '@/server/lib/mailer';
 import { dummyVerify, hashPassword, verifyPassword } from '@/server/lib/password';
@@ -19,6 +19,7 @@ import { parse } from '@/server/lib/validation';
 import * as authTokens from '@/server/repos/auth-tokens.repo';
 import { transaction } from '@/server/repos/transaction';
 import * as users from '@/server/repos/users.repo';
+import { acceptInvite, getInvitePreview } from './members.service';
 import { createOrganization } from './organizations.service';
 
 const VERIFY_TTL_MS = 24 * 60 * 60_000;
@@ -66,10 +67,40 @@ export async function signUp(input: unknown, meta: { ip: string }) {
       text: `Someone tried to sign up with this email. Log in at ${env.APP_URL}/login or reset your password at ${env.APP_URL}/reset.`,
       html: `<p>Someone tried to sign up with this email. <a href="${env.APP_URL}/login">Log in</a> or <a href="${env.APP_URL}/reset">reset your password</a>.</p>`,
     });
-    return { status: 'check_email' as const };
+    return { status: 'check_email' as const, orgSlug: null };
   }
 
   const passwordHash = await hashPassword(data.password);
+
+  if (data.inviteToken) {
+    // The invite link was emailed to this address, which proves inbox ownership:
+    // the account starts verified and joins the inviting workspace instead of creating one.
+    const inviteToken = data.inviteToken;
+    const invite = await getInvitePreview(inviteToken);
+    if (invite.status !== 'valid') {
+      throw badRequest('This invite has expired, been revoked or already been used');
+    }
+    if (invite.email.toLowerCase() !== data.email) {
+      throw validationFailed('Use the email address the invite was sent to', {
+        fieldErrors: { email: [`This invite is for ${invite.email}`] },
+      });
+    }
+    const joined = await transaction(async (tx) => {
+      const created = await users.createUser(
+        { email: data.email, name: data.name, passwordHash, emailVerifiedAt: new Date() },
+        tx,
+      );
+      await acceptInvite(
+        { id: created.id, email: created.email, name: created.name },
+        inviteToken,
+        tx,
+      );
+      return created;
+    });
+    logger.info({ userId: joined.id }, 'user signed up via invite');
+    return { status: 'joined' as const, orgSlug: invite.org.slug };
+  }
+
   const user = await transaction(async (tx) => {
     const created = await users.createUser(
       { email: data.email, name: data.name, passwordHash },
@@ -80,7 +111,7 @@ export async function signUp(input: unknown, meta: { ip: string }) {
   });
   await sendVerification(user.id, user.email);
   logger.info({ userId: user.id }, 'user signed up');
-  return { status: 'check_email' as const };
+  return { status: 'check_email' as const, orgSlug: null };
 }
 
 export async function verifyEmail(token: unknown) {

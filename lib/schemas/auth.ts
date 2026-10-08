@@ -17,12 +17,22 @@ export const orgNameSchema = z
   .min(2, 'Use at least 2 characters')
   .max(60, 'Use at most 60 characters');
 
-export const signUpSchema = z.object({
-  name: z.string().trim().min(1, 'Enter your name').max(80),
-  email: emailSchema,
-  password: passwordSchema,
-  orgName: orgNameSchema,
-});
+/** `orgName` is required unless the user signs up through an invite link. */
+export const signUpSchema = z
+  .object({
+    name: z.string().trim().min(1, 'Enter your name').max(80),
+    email: emailSchema,
+    password: passwordSchema,
+    orgName: z.preprocess((v) => (v === '' ? undefined : v), orgNameSchema.optional()),
+    inviteToken: z.preprocess(
+      (v) => (v === '' ? undefined : v),
+      z.string().min(20).max(200).optional(),
+    ),
+  })
+  .refine((d) => d.inviteToken || d.orgName, {
+    path: ['orgName'],
+    message: 'Enter a workspace name',
+  });
 
 export const loginSchema = z.object({
   email: emailSchema,
