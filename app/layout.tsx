@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from 'next';
+import { headers } from 'next/headers';
 import './globals.css';
 
 export const metadata: Metadata = {
@@ -8,7 +9,12 @@ export const metadata: Metadata = {
 
 export const viewport: Viewport = { themeColor: '#18181b' };
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+/**
+ * Reading request headers opts every page into dynamic rendering, which the
+ * per-request CSP nonce requires (Next injects it into its own script tags).
+ */
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  await headers();
   return (
     <html lang="en">
       <body>{children}</body>
