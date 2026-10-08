@@ -35,12 +35,17 @@ listing members requires `member:invite` (assignee pickers use `listAssignees`, 
 
 ## Phase 3 — Core product
 
-- [ ] Projects CRUD + archive; Requests CRUD (status, priority, assignee, due date); comments
-- [ ] Filters, sorting, cursor pagination, optimistic UI, loading/empty/error states
-- [ ] VIEWER read-only in UI and server
-- [ ] Service unit + integration tests; keyboard and label accessibility
+- [x] Projects CRUD + archive; Requests CRUD (status, priority, assignee, due date); comments
+- [x] Filters, sorting, cursor pagination, optimistic UI, loading/empty/error states
+- [x] VIEWER read-only in UI and server
+- [x] Service unit + integration tests; keyboard and label accessibility
 
-**Acceptance:** a MEMBER can run a project end to end; a VIEWER cannot mutate anything (403 from API).
+**Acceptance:** a MEMBER can run a project end to end; a VIEWER cannot mutate anything (403 from API) —
+`tests/e2e/product.spec.ts`, `tests/integration/projects-requests.test.ts`, `api-product.test.ts`.
+
+Decisions: filters live in the URL (shareable, server-rendered first page); limit-sensitive writes use
+serializable transactions with automatic retry; comment authors (or ADMIN+) may delete comments;
+archived projects reject new requests (409) and do not count toward the project limit.
 
 ## Phase 4 — Billing
 

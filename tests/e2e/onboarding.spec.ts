@@ -3,19 +3,30 @@ import { linkFromEmail, logIn, signUp, uniqueEmail } from './helpers';
 
 const PASSWORD = 'e2e-password-123';
 
-test('sign up → create org → invite → accept in a second browser context', async ({ page, browser }) => {
+test('sign up → create org → invite → accept in a second browser context', async ({
+  page,
+  browser,
+}) => {
   const ownerEmail = uniqueEmail('owner');
   const inviteeEmail = uniqueEmail('invitee');
 
-  await signUp(page, { name: 'Olive Owner', email: ownerEmail, password: PASSWORD, orgName: 'Olive Studio' });
+  await signUp(page, {
+    name: 'Olive Owner',
+    email: ownerEmail,
+    password: PASSWORD,
+    orgName: 'Olive Studio',
+  });
   await logIn(page, ownerEmail, PASSWORD);
   await expect(page.getByRole('heading', { name: 'Olive Studio' })).toBeVisible();
 
   await page.getByRole('link', { name: 'Members' }).click();
+  await page.waitForURL(/\/members$/);
   await page.getByLabel('Email').fill(inviteeEmail);
   await page.getByLabel('Role', { exact: true }).selectOption('MEMBER');
   await page.getByRole('button', { name: 'Send invite' }).click();
-  await expect(page.getByRole('status').filter({ hasText: `Invite sent to ${inviteeEmail}` })).toBeVisible();
+  await expect(
+    page.getByRole('status').filter({ hasText: `Invite sent to ${inviteeEmail}` }),
+  ).toBeVisible();
   await expect(page.getByRole('listitem').filter({ hasText: inviteeEmail })).toBeVisible();
 
   const inviteLink = await linkFromEmail(inviteeEmail, /invited to Olive Studio/);

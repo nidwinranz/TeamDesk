@@ -52,9 +52,16 @@ export async function signUp(
   await expect(page).toHaveURL(/\/login\?verified=1/);
 }
 
-export async function logIn(page: Page, email: string, password: string) {
+/** Submits the login form without waiting for the outcome (use for negative cases). */
+export async function attemptLogIn(page: Page, email: string, password: string) {
   await page.goto('/login');
   await page.getByLabel('Email').fill(email);
   await page.getByLabel('Password').fill(password);
   await page.getByRole('button', { name: 'Log in' }).click();
+}
+
+/** Logs in and waits until the app has navigated away from /login. */
+export async function logIn(page: Page, email: string, password: string) {
+  await attemptLogIn(page, email, password);
+  await page.waitForURL((url) => !url.pathname.startsWith('/login'));
 }

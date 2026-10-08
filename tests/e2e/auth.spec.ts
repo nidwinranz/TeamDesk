@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { linkFromEmail, logIn, signUp, uniqueEmail } from './helpers';
+import { attemptLogIn, linkFromEmail, logIn, signUp, uniqueEmail } from './helpers';
 
 test('sign up, verify via email, log in, log out, reset password', async ({ page }) => {
   const email = uniqueEmail('auth');
@@ -21,7 +21,7 @@ test('sign up, verify via email, log in, log out, reset password', async ({ page
   await page.getByRole('button', { name: 'Set new password' }).click();
   await expect(page).toHaveURL(/\/login\?reset=1/);
 
-  await logIn(page, email, password);
+  await attemptLogIn(page, email, password);
   await expect(page.getByText('Incorrect email or password.')).toBeVisible();
   await logIn(page, email, 'a-brand-new-password');
   await expect(page.getByRole('heading', { name: 'Erin Co' })).toBeVisible();
