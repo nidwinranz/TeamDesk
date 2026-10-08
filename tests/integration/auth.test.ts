@@ -26,7 +26,10 @@ describe('sign up → verify → login', () => {
   };
 
   it('creates user, workspace (OWNER) and audit entry, and emails a verification link', async () => {
-    await expect(auth.signUp(input, meta)).resolves.toEqual({ status: 'check_email' });
+    await expect(auth.signUp(input, meta)).resolves.toEqual({
+      status: 'check_email',
+      orgSlug: null,
+    });
 
     const user = await testDb.user.findUniqueOrThrow({ where: { email: 'ada@example.com' } });
     expect(user.emailVerifiedAt).toBeNull();
@@ -58,6 +61,7 @@ describe('sign up → verify → login', () => {
     await createUser({ email: 'taken@example.com' });
     await expect(auth.signUp({ ...input, email: 'taken@example.com' }, meta)).resolves.toEqual({
       status: 'check_email',
+      orgSlug: null,
     });
     expect(mailer.last()?.subject).toMatch(/already have/);
     expect(await testDb.user.count()).toBe(1);

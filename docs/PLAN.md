@@ -20,13 +20,18 @@ auth flow via Mailpit (verified by `tests/e2e/auth.spec.ts`).
 
 ## Phase 2 — Organisations, invites, roles
 
-- [ ] Org created at sign-up; unique slug; workspace switcher; middleware resolves org + checks membership
-- [ ] Invites: 32-byte token, SHA-256 hash stored, 7-day expiry, single use; email; accept page; revoke; resend
-- [ ] Members page: list, change role, remove; last OWNER cannot be removed/demoted
-- [ ] AuditLog: invite sent/accepted/revoked, role changed, member removed
-- [ ] Integration tests on real Postgres incl. "Org A user gets 404 on Org B resources"
+- [x] Org created at sign-up; unique slug; workspace switcher; middleware resolves org + checks membership
+- [x] Invites: 32-byte token, SHA-256 hash stored, 7-day expiry, single use; email; accept page; revoke; resend
+- [x] Members page: list, change role, remove; last OWNER cannot be removed/demoted
+- [x] AuditLog: invite sent/accepted/revoked, role changed, member removed
+- [x] Integration tests on real Postgres incl. "Org A user gets 404 on Org B resources"
 
-**Acceptance:** invite → accept flow works end to end; cross-tenant access returns 404 in tests.
+**Acceptance:** invite → accept flow works end to end (`tests/e2e/onboarding.spec.ts`); cross-tenant access
+returns 404 (`tests/integration/members.test.ts`, `api-members.test.ts`).
+
+Decisions: invitee email must match the invited address; signing up through an invite joins that
+workspace (account starts verified) instead of creating a new one; pending invites count as seats;
+listing members requires `member:invite` (assignee pickers use `listAssignees`, gated on `request:read`).
 
 ## Phase 3 — Core product
 
