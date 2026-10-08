@@ -7,6 +7,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { NativeSelect } from '@/components/ui/native-select';
+import { formString } from '@/lib/form';
 import { api, ApiError, errorMessage } from '@/lib/api-client';
 import { UpgradePrompt } from '@/components/billing/upgrade-prompt';
 
@@ -26,7 +27,7 @@ export function InviteForm({
     e.preventDefault();
     const form = e.currentTarget;
     const data = new FormData(form);
-    const email = typeof data.get('email') === 'string' ? (data.get('email') as string) : '';
+    const email = formString(data, 'email');
     setPending(true);
     setError(null);
     setMessage(null);
