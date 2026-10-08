@@ -78,8 +78,8 @@ Coverage excludes `server/auth.ts`, `server/auth.config.ts` (Auth.js wiring, cov
 
 ## Phase 6 — Ship and showcase
 
-- [ ] `docs/DEPLOYMENT.md` (Vercel + Neon + Upstash + Resend + Stripe; `prisma migrate deploy` in release step)
-- [ ] Demo mode: seeded demo org with OWNER + VIEWER logins + reset script
-- [ ] Lighthouse 90+ on dashboard pages
-- [ ] Final README (pitch, demo, features, Mermaid diagram, decisions, setup, testing, roadmap)
-- [ ] `docs/CASE_STUDY.md` + 3 CV bullets based only on what was built and measured
+- [x] `docs/DEPLOYMENT.md` (Vercel + Neon + Upstash + Resend + Stripe; `prisma migrate deploy` in release step)
+- [x] Demo mode: seeded demo org with OWNER + VIEWER logins + `pnpm demo:reset` (+ nightly workflow)
+- [x] Lighthouse 90+ on dashboard pages (measured 98–100, `docs/LIGHTHOUSE.md`)
+- [x] Final README (pitch, demo, features, Mermaid diagram, decisions, setup, testing, roadmap)
+- [x] `docs/CASE_STUDY.md` + 3 CV bullets based only on what was built and measured
