@@ -3,7 +3,7 @@ import { linkFromEmail, logIn, signUp, uniqueEmail } from './helpers';
 
 const PASSWORD = 'e2e-password-123';
 
-test('sign up → create org → invite → accept in a second browser context', async ({
+test('sign up → create org → invite → accept in a second browser context → upgrade', async ({
   page,
   browser,
 }) => {
@@ -51,4 +51,16 @@ test('sign up → create org → invite → accept in a second browser context',
 
   await page.reload();
   await expect(page.getByRole('cell', { name: new RegExp(inviteeEmail) })).toBeVisible();
+
+  // Upgrade through (mocked) Stripe Checkout; the plan flips only when the signed webhook lands.
+  await page.getByRole('link', { name: 'Billing' }).click();
+  await page.waitForURL(/\/billing$/);
+  await expect(page.getByTestId('current-plan')).toHaveText('Free');
+  await page.getByRole('button', { name: 'Upgrade to Pro' }).click();
+  await page.waitForURL(/\/billing\/mock\?flow=checkout/);
+  await page.getByRole('button', { name: 'Pay $29 and subscribe' }).click();
+  await page.waitForURL(/checkout=success/);
+  await expect(page.getByTestId('current-plan')).toHaveText('Pro');
+  await expect(page.getByText('Your workspace is now on Pro')).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Manage billing' })).toBeVisible();
 });
