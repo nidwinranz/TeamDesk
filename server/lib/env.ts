@@ -56,16 +56,16 @@ const schema = z
 
 export type Env = z.infer<typeof schema>;
 
-function load(): Env {
+export function parseEnv(input: Record<string, string | undefined>): Env {
   // `next build` evaluates server modules without runtime secrets; allow opting out there.
   const source =
-    process.env.SKIP_ENV_VALIDATION === '1'
+    input.SKIP_ENV_VALIDATION === '1'
       ? {
-          ...process.env,
+          ...input,
           NODE_ENV: 'development',
-          DATABASE_URL: process.env.DATABASE_URL ?? 'postgresql://build',
+          DATABASE_URL: input.DATABASE_URL ?? 'postgresql://build',
         }
-      : process.env;
+      : input;
   const parsed = schema.safeParse(source);
   if (!parsed.success) {
     const issues = parsed.error.issues.map((i) => `${i.path.join('.')}: ${i.message}`).join('; ');
@@ -74,4 +74,4 @@ function load(): Env {
   return parsed.data;
 }
 
-export const env: Env = load();
+export const env: Env = parseEnv(process.env);

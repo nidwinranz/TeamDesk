@@ -1,4 +1,5 @@
 import 'server-only';
+import * as Sentry from '@sentry/nextjs';
 import { randomUUID } from 'node:crypto';
 import { NextResponse, type NextRequest } from 'next/server';
 import { mapDbError } from '@/server/repos/db-errors';
@@ -88,8 +89,10 @@ async function run(req: NextRequest, fn: (requestId: string) => Promise<Response
     return res;
   } catch (err) {
     const appErr = toAppError(err);
-    if (appErr.status >= 500) log.error({ err }, 'api error');
-    else log.info({ status: appErr.status, code: appErr.code }, 'api request rejected');
+    if (appErr.status >= 500) {
+      log.error({ err }, 'api error');
+      Sentry.captureException(err, { tags: { requestId } });
+    } else log.info({ status: appErr.status, code: appErr.code }, 'api request rejected');
     return jsonError(appErr, requestId);
   }
 }
