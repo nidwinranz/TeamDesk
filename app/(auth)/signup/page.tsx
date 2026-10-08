@@ -1,0 +1,38 @@
+import type { Metadata } from 'next';
+import Link from 'next/link';
+import { GoogleButton } from '@/components/auth/google-button';
+import { SignUpForm } from '@/components/auth/signup-form';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
+import { googleEnabled } from '@/server/auth';
+
+export const metadata: Metadata = { title: 'Sign up' };
+
+export default function SignUpPage() {
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>
+          <h1>Create your workspace</h1>
+        </CardTitle>
+        <CardDescription>Free for up to 5 members and 3 projects.</CardDescription>
+      </CardHeader>
+      <CardContent className="grid gap-4">
+        <SignUpForm />
+        {googleEnabled && <GoogleButton callbackUrl="/onboarding" />}
+      </CardContent>
+      <CardFooter className="text-muted-foreground text-sm">
+        Already have an account?&nbsp;
+        <Link href="/login" className="text-foreground underline underline-offset-4">
+          Log in
+        </Link>
+      </CardFooter>
+    </Card>
+  );
+}
