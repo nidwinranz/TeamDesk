@@ -14,6 +14,12 @@ import * as requests from '@/server/repos/requests.repo';
 import { transaction, type Tx } from '@/server/repos/transaction';
 import { assertCan, type OrgContext } from './context';
 
+/** API/DTO shape: Prisma's `_count` becomes a flat `commentCount`. */
+function withCommentCount<T extends { _count: { comments: number } }>(row: T) {
+  const { _count, ...rest } = row;
+  return { ...rest, commentCount: _count.comments };
+}
+
 /** Assignees must be non-viewer members of the same org; anything else is a 422, never a leak. */
 async function assertAssignable(ctx: OrgContext, assigneeId: string | null | undefined, tx?: Tx) {
   if (!assigneeId) return;
@@ -38,18 +44,14 @@ export async function listRequests(ctx: OrgContext, query: Record<string, unknow
           ? ctx.user.id
           : filter.assignee;
   const result = await requests.listRequests(ctx.org.id, { ...filter, assigneeId }, page);
-  return {
-    ...result,
-    items: result.items.map(({ _count, ...r }) => ({ ...r, commentCount: _count.comments })),
-  };
+  return { ...result, items: result.items.map(withCommentCount) };
 }
 
 export async function getRequest(ctx: OrgContext, requestId: string) {
   assertCan(ctx, 'request:read');
   const request = await requests.findRequest(ctx.org.id, requestId);
   if (!request) throw notFound('Request');
-  const { _count, ...rest } = request;
-  return { ...rest, commentCount: _count.comments };
+  return withCommentCount(request);
 }
 
 export async function getRequestSummary(ctx: OrgContext) {
@@ -82,7 +84,7 @@ export async function createRequest(ctx: OrgContext, input: unknown) {
       },
       tx,
     );
-    return created;
+    return withCommentCount(created);
   });
 }
 
@@ -111,7 +113,7 @@ export async function updateRequest(ctx: OrgContext, requestId: string, input: u
       },
       tx,
     );
-    return updated;
+    return withCommentCount(updated);
   });
 }
 

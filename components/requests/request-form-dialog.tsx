@@ -20,7 +20,8 @@ import { NativeSelect } from '@/components/ui/native-select';
 import { Textarea } from '@/components/ui/textarea';
 import { api, ApiError } from '@/lib/api-client';
 import { PRIORITY_LABEL } from '@/lib/format';
-import type { ProjectOption, UserDTO } from '@/lib/types';
+import type { ProjectOption, RequestDTO, UserDTO } from '@/lib/types';
+import { useCreatedRequests } from './requests-store';
 
 interface Props {
   orgSlug: string;
@@ -34,6 +35,7 @@ export function RequestFormDialog({ orgSlug, projects, assignees, defaultProject
   const [open, setOpen] = useState(false);
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<ApiError | null>(null);
+  const { add } = useCreatedRequests();
   const active = projects.filter((p) => !p.archived);
 
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
@@ -44,7 +46,7 @@ export function RequestFormDialog({ orgSlug, projects, assignees, defaultProject
     setPending(true);
     setError(null);
     try {
-      await api(`/orgs/${orgSlug}/requests`, {
+      const res = await api<{ data: RequestDTO }>(`/orgs/${orgSlug}/requests`, {
         method: 'POST',
         body: {
           projectId: f.get('projectId'),
@@ -55,6 +57,7 @@ export function RequestFormDialog({ orgSlug, projects, assignees, defaultProject
           dueDate: due ? due : null,
         },
       });
+      add(res.data);
       setOpen(false);
       router.refresh();
     } catch (err) {

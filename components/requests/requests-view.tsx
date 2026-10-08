@@ -9,6 +9,7 @@ import { listRequests } from '@/server/services/requests.service';
 import { RequestFilters } from './request-filters';
 import { RequestFormDialog } from './request-form-dialog';
 import { RequestsTable } from './requests-table';
+import { RequestsProvider } from './requests-store';
 
 const FILTER_KEYS = ['projectId', 'status', 'priority', 'assignee', 'q', 'sort', 'order'] as const;
 
@@ -44,32 +45,24 @@ export async function RequestsView({
   const qs = new URLSearchParams({ ...query, limit: '25' }).toString();
 
   return (
-    <div className="grid gap-4">
-      <div className="flex flex-wrap items-end justify-between gap-4">
-        <div className="min-w-0 flex-1">
-          <RequestFilters projects={projectId ? undefined : projectOptions} assignees={assignees} />
+    <RequestsProvider>
+      <div className="grid gap-4">
+        <div className="flex flex-wrap items-end justify-between gap-4">
+          <div className="min-w-0 flex-1">
+            <RequestFilters
+              projects={projectId ? undefined : projectOptions}
+              assignees={assignees}
+            />
+          </div>
+          {canCreate && (
+            <RequestFormDialog
+              orgSlug={ctx.org.slug}
+              projects={projectOptions}
+              assignees={assignees}
+              defaultProjectId={projectId}
+            />
+          )}
         </div>
-        {canCreate && (
-          <RequestFormDialog
-            orgSlug={ctx.org.slug}
-            projects={projectOptions}
-            assignees={assignees}
-            defaultProjectId={projectId}
-          />
-        )}
-      </div>
-      {page.items.length === 0 ? (
-        <EmptyState
-          title={filtered ? 'No requests match these filters' : 'No requests yet'}
-          description={
-            filtered
-              ? 'Try clearing a filter.'
-              : canCreate
-                ? 'Create the first request for this workspace.'
-                : undefined
-          }
-        />
-      ) : (
         <RequestsTable
           orgSlug={ctx.org.slug}
           initial={page.items.map(toRequestDTO)}
@@ -77,8 +70,20 @@ export async function RequestsView({
           query={qs}
           canEdit={can(ctx.membership, 'request:update')}
           showProject={!projectId}
+          empty={
+            <EmptyState
+              title={filtered ? 'No requests match these filters' : 'No requests yet'}
+              description={
+                filtered
+                  ? 'Try clearing a filter.'
+                  : canCreate
+                    ? 'Create the first request for this workspace.'
+                    : undefined
+              }
+            />
+          }
         />
-      )}
-    </div>
+      </div>
+    </RequestsProvider>
   );
 }

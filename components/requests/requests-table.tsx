@@ -2,7 +2,7 @@
 
 import { MessageSquare } from 'lucide-react';
 import Link from 'next/link';
-import { useEffect, useOptimistic, useState, useTransition } from 'react';
+import { useEffect, useMemo, useOptimistic, useState, useTransition } from 'react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { NativeSelect } from '@/components/ui/native-select';
@@ -19,6 +19,7 @@ import { formatDate, isOverdue, type Status, STATUS_LABEL } from '@/lib/format';
 import type { RequestDTO } from '@/lib/types';
 import { cn } from '@/lib/utils';
 import { PriorityLabel, StatusBadge } from './badges';
+import { useCreatedRequests } from './requests-store';
 
 interface Props {
   orgSlug: string;
@@ -28,6 +29,8 @@ interface Props {
   query: string;
   canEdit: boolean;
   showProject: boolean;
+  /** Rendered when there are no rows (server-provided so it can say why). */
+  empty?: React.ReactNode;
 }
 
 export function RequestsTable({
@@ -37,14 +40,20 @@ export function RequestsTable({
   query,
   canEdit,
   showProject,
+  empty,
 }: Props) {
   const [rows, setRows] = useState(initial);
   const [cursor, setCursor] = useState(initialCursor);
   const [loadingMore, setLoadingMore] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [, startTransition] = useTransition();
+  const { created } = useCreatedRequests();
+  const merged = useMemo(
+    () => [...created.filter((c) => !rows.some((r) => r.id === c.id)), ...rows],
+    [created, rows],
+  );
   const [optimisticRows, setOptimisticStatus] = useOptimistic(
-    rows,
+    merged,
     (state, u: { id: string; status: Status }) =>
       state.map((r) => (r.id === u.id ? { ...r, status: u.status } : r)),
   );
@@ -82,12 +91,18 @@ export function RequestsTable({
           method: 'PATCH',
           body: { status },
         });
-        setRows((prev) => prev.map((r) => (r.id === id ? { ...r, status: res.data.status } : r)));
+        setRows((prev) =>
+          prev.some((r) => r.id === id)
+            ? prev.map((r) => (r.id === id ? { ...r, status: res.data.status } : r))
+            : [res.data, ...prev],
+        );
       } catch (err) {
         setError(errorMessage(err)); // optimistic value is discarded automatically
       }
     });
   }
+
+  if (optimisticRows.length === 0 && !error) return <>{empty}</>;
 
   return (
     <div className="grid gap-3">
