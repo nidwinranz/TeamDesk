@@ -19,7 +19,6 @@ export function AcceptInviteButton({ token }: { token: string }) {
         method: 'POST',
       });
       router.push(`/${data.org.slug}`);
-      router.refresh();
     } catch (err) {
       setError(errorMessage(err));
       setPending(false);

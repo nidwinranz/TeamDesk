@@ -84,6 +84,7 @@ export default async function ProjectsPage({
             <li key={p.id}>
               <Link
                 href={`${base}/${p.id}`}
+                prefetch={false}
                 className="focus-visible:ring-ring/50 block rounded-xl focus-visible:ring-[3px] focus-visible:outline-none"
               >
                 <Card className="hover:bg-accent/40 h-full transition-colors">

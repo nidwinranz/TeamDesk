@@ -111,7 +111,11 @@ export function RequestsTable({
           {optimisticRows.map((r) => (
             <TableRow key={r.id}>
               <TableCell className="max-w-xs whitespace-normal">
-                <Link href={`/${orgSlug}/requests/${r.id}`} className="font-medium hover:underline">
+                <Link
+                  href={`/${orgSlug}/requests/${r.id}`}
+                  prefetch={false}
+                  className="font-medium hover:underline"
+                >
                   {r.title}
                 </Link>
                 {r.commentCount > 0 && (

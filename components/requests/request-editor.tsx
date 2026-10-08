@@ -58,7 +58,6 @@ export function RequestEditor({ orgSlug, request, assignees, canEdit, canDelete 
     try {
       await api(`/orgs/${orgSlug}/requests/${request.id}`, { method: 'DELETE' });
       router.push(`/${orgSlug}/requests`);
-      router.refresh();
     } catch (err) {
       setError(errorMessage(err));
     }
