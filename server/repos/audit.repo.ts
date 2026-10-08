@@ -11,6 +11,11 @@ export interface AuditEntry {
   metadata?: Prisma.InputJsonValue;
 }
 
+/** Normalises arbitrary values (Dates, undefined) into JSON-safe audit metadata. */
+export function toAuditJson(value: unknown): Prisma.InputJsonValue {
+  return JSON.parse(JSON.stringify(value ?? {})) as Prisma.InputJsonValue;
+}
+
 export function appendAuditLog(entry: AuditEntry, db: Tx = prisma) {
   return db.auditLog.create({
     data: {
