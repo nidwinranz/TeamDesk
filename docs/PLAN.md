@@ -49,15 +49,19 @@ archived projects reject new requests (409) and do not count toward the project 
 
 ## Phase 4 — Billing
 
-- [ ] Plans in one config: FREE (3 projects, 5 members), PRO (unlimited)
-- [ ] Checkout + Customer Portal endpoints; Subscription updated only by webhooks
-- [ ] Webhook: raw-body signature check; dedupe by `WebhookEvent.stripeEventId`; checkout.session.completed,
+- [x] Plans in one config (`server/config/plans.ts`): FREE (3 projects, 5 members), PRO (unlimited)
+- [x] Checkout + Customer Portal endpoints; Subscription updated only by webhooks
+- [x] Webhook: raw-body signature check; dedupe by `WebhookEvent.stripeEventId`; checkout.session.completed,
       customer.subscription.updated/deleted, invoice.payment_failed
-- [ ] Server-side limit checks; upgrade prompts; billing page
-- [ ] Tests: replayed event changes state once; out-of-order events safe
-- [ ] README: local testing with Stripe CLI; `docs/adr/0003-webhook-idempotency.md`
+- [x] Server-side limit checks; upgrade prompts; billing page
+- [x] Tests: replayed event changes state once; out-of-order events safe
+- [x] README: local testing with Stripe CLI; `docs/adr/0003-webhook-idempotency.md`
 
-**Acceptance:** FREE org blocked at limits (403 `PLAN_LIMIT_REACHED`); webhook tests prove idempotency.
+**Acceptance:** FREE org blocked at limits (403 `PLAN_LIMIT_REACHED`); webhook tests prove idempotency
+(`tests/integration/billing.test.ts`); E2E upgrade via mock checkout (`tests/e2e/onboarding.spec.ts`).
+
+Decisions: `BILLING_MODE=mock` posts signed fake events to the real webhook so dev/E2E need no Stripe keys;
+`past_due` keeps PRO (grace period); only OWNER can start checkout / open the portal.
 
 ## Phase 5 — Hardening
 
