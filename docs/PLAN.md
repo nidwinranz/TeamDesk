@@ -65,14 +65,16 @@ Decisions: `BILLING_MODE=mock` posts signed fake events to the real webhook so d
 
 ## Phase 5 — Hardening
 
-- [ ] Audit log page (ADMIN+), cursor paginated, filter by action
-- [ ] Redis rate limits on auth and write endpoints
-- [ ] Security headers (CSP, HSTS, …), CSRF review, Sentry, pino logs, `/api/health` (DB + Redis)
-- [ ] Playwright: sign up → create org → invite → accept (second context) → upgrade (mocked Stripe)
-- [ ] CI: integration (Postgres service) + E2E jobs; coverage ≥ 80% on `server/`
-- [ ] `docs/adr/0002-auth.md`
+- [x] Audit log page (ADMIN+), cursor paginated, filter by action
+- [x] Redis rate limits on auth and write endpoints
+- [x] Security headers (CSP, HSTS, …), CSRF review, Sentry, pino logs, `/api/health` (DB + Redis)
+- [x] Playwright: sign up → create org → invite → accept (second context) → upgrade (mocked Stripe)
+- [x] CI: integration (Postgres service) + E2E jobs; coverage ≥ 80% on `server/` (measured 95.1% lines)
+- [x] `docs/adr/0002-auth.md`
 
-**Acceptance:** CI green on all jobs; coverage gate enforced.
+**Acceptance:** coverage gate enforced in `vitest.config.mts` (80% lines/statements/functions, 70% branches).
+Coverage excludes `server/auth.ts`, `server/auth.config.ts` (Auth.js wiring, covered by E2E) and
+`server/lib/redis.ts` (connection bootstrap). Also added: workspace settings page (rename / change URL).
 
 ## Phase 6 — Ship and showcase
 
