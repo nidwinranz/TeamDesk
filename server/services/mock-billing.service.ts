@@ -8,19 +8,21 @@ import {
   mockPaymentFailed,
   mockSubscription,
 } from '@/server/lib/mock-stripe';
-import { signWebhookPayload } from '@/server/lib/stripe';
+import { constructWebhookEvent, signWebhookPayload } from '@/server/lib/stripe';
 import { parse } from '@/server/lib/validation';
 import { findSubscriptionByOrg } from '@/server/repos/subscriptions.repo';
 import { assertCan, type OrgContext } from './context';
+import { handleStripeEvent } from './stripe-webhooks.service';
 
 const schema = z.object({ action: z.enum(['checkout', 'cancel', 'payment_failed']) });
 
 /**
  * Mock billing (BILLING_MODE=mock only): builds a Stripe-shaped event, signs it
- * with the webhook secret and POSTs it to our real webhook endpoint, so the
- * signature check, dedupe and state machine are exercised exactly as in prod.
+ * with the webhook secret, then verifies and processes it with the same code the
+ * webhook route uses (signature check, dedupe, state machine). It runs in-process:
+ * a server calling its own URL is fragile behind proxies and CI networking.
  */
-export async function simulateStripe(ctx: OrgContext, input: unknown, webhookUrl: string) {
+export async function simulateStripe(ctx: OrgContext, input: unknown) {
   if (env.BILLING_MODE !== 'mock') throw notFound();
   assertCan(ctx, 'billing:manage');
   const { action } = parse(schema, input);
@@ -50,14 +52,6 @@ export async function simulateStripe(ctx: OrgContext, input: unknown, webhookUrl
   }
 
   const payload = JSON.stringify(event);
-  const res = await fetch(webhookUrl, {
-    method: 'POST',
-    headers: {
-      'content-type': 'application/json',
-      'stripe-signature': signWebhookPayload(payload),
-    },
-    body: payload,
-  });
-  if (!res.ok) throw new Error(`mock webhook delivery failed: ${res.status}`);
-  return (await res.json()) as { outcome: string };
+  const verified = constructWebhookEvent(payload, signWebhookPayload(payload));
+  return { outcome: await handleStripeEvent(verified) };
 }

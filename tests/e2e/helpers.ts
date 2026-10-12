@@ -1,4 +1,19 @@
 import { expect, type Page } from '@playwright/test';
+import Redis from 'ioredis';
+
+/**
+ * Every E2E sign-up comes from one IP, so the per-IP sign-up limit (5/hour) would
+ * trip on Playwright retries. Clear those buckets before each sign-up.
+ */
+export async function resetSignupRateLimit() {
+  const redis = new Redis(process.env.REDIS_URL ?? 'redis://localhost:6379');
+  try {
+    const keys = await redis.keys('rl:signup:*');
+    if (keys.length) await redis.del(...keys);
+  } finally {
+    redis.disconnect();
+  }
+}
 
 const MAILPIT = process.env.MAILPIT_URL ?? 'http://localhost:8025';
 
@@ -38,6 +53,7 @@ export async function signUp(
   page: Page,
   opts: { name: string; email: string; password: string; orgName: string },
 ) {
+  await resetSignupRateLimit();
   await page.goto('/signup');
   await page.getByLabel('Your name').fill(opts.name);
   await page.getByLabel('Work email').fill(opts.email);

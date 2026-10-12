@@ -291,33 +291,25 @@ describe('billing service', () => {
 });
 
 describe('mock billing (BILLING_MODE=mock)', () => {
-  it('delivers signed events through the real webhook route', async () => {
+  it('signs, verifies and processes events through the webhook handler', async () => {
     const { simulateStripe } = await import('@/server/services/mock-billing.service');
-    const { NextRequest } = await import('next/server');
-    vi.stubGlobal(
-      'fetch',
-      (url: string, init: { method: string; headers: Record<string, string>; body: string }) =>
-        webhookRoute.POST(new NextRequest(url, init)),
-    );
-    try {
+    {
       const { org, ctx } = await createOrgWithRoles(['OWNER', 'ADMIN']);
-      const url = 'http://localhost:3000/api/webhooks/stripe';
-      await expect(simulateStripe(ctx.ADMIN, { action: 'checkout' }, url)).rejects.toMatchObject({
+      await expect(simulateStripe(ctx.ADMIN, { action: 'checkout' })).rejects.toMatchObject({
         status: 403,
       });
-      await expect(simulateStripe(ctx.OWNER, { action: 'cancel' }, url)).rejects.toMatchObject({
+      await expect(simulateStripe(ctx.OWNER, { action: 'cancel' })).rejects.toMatchObject({
         status: 404,
       });
-      expect(await simulateStripe(ctx.OWNER, { action: 'checkout' }, url)).toMatchObject({
+      expect(await simulateStripe(ctx.OWNER, { action: 'checkout' })).toMatchObject({
         outcome: 'processed',
       });
       expect(await planOf(org.id)).toBe('PRO');
-      await simulateStripe(ctx.OWNER, { action: 'payment_failed' }, url);
+      await simulateStripe(ctx.OWNER, { action: 'payment_failed' });
       expect(await subOf(org.id)).toMatchObject({ status: 'past_due' });
-      await simulateStripe(ctx.OWNER, { action: 'cancel' }, url);
+      await simulateStripe(ctx.OWNER, { action: 'cancel' });
       expect(await planOf(org.id)).toBe('FREE');
-    } finally {
-      vi.unstubAllGlobals();
+      expect(await testDb.webhookEvent.count()).toBe(3);
     }
   });
 });

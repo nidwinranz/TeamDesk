@@ -3,11 +3,5 @@ import { simulateStripe } from '@/server/services/mock-billing.service';
 
 /** Dev/E2E only: simulates Stripe checkout/portal outcomes. 404 unless BILLING_MODE=mock. */
 export const POST = orgRoute(async ({ req, ctx }) =>
-  ok(
-    await simulateStripe(
-      ctx,
-      await readJson(req),
-      new URL('/api/webhooks/stripe', req.url).toString(),
-    ),
-  ),
+  ok(await simulateStripe(ctx, await readJson(req))),
 );

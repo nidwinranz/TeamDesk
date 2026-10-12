@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { linkFromEmail, logIn, signUp, uniqueEmail } from './helpers';
+import { linkFromEmail, logIn, resetSignupRateLimit, signUp, uniqueEmail } from './helpers';
 
 const PASSWORD = 'e2e-password-123';
 
@@ -40,6 +40,7 @@ test('sign up → create org → invite → accept in a second browser context �
   await expect(p2.getByLabel('Workspace name')).toHaveCount(0);
   await p2.getByLabel('Your name').fill('Ivy Invitee');
   await p2.getByLabel('Password').fill(PASSWORD);
+  await resetSignupRateLimit();
   await p2.getByRole('button', { name: 'Create account' }).click();
   await expect(p2.getByText('invite accepted')).toBeVisible();
   await p2.getByLabel('Password').fill(PASSWORD);
