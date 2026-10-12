@@ -60,7 +60,7 @@ archived projects reject new requests (409) and do not count toward the project 
 **Acceptance:** FREE org blocked at limits (403 `PLAN_LIMIT_REACHED`); webhook tests prove idempotency
 (`tests/integration/billing.test.ts`); E2E upgrade via mock checkout (`tests/e2e/onboarding.spec.ts`).
 
-Decisions: `BILLING_MODE=mock` posts signed fake events to the real webhook so dev/E2E need no Stripe keys;
+Decisions: `BILLING_MODE=mock` signs fake events and runs them through the webhook verification + handler so dev/E2E need no Stripe keys;
 `past_due` keeps PRO (grace period); only OWNER can start checkout / open the portal.
 
 ## Phase 5 — Hardening

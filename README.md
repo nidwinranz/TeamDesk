@@ -111,7 +111,7 @@ Integration tests use a separate `teamdesk_test` database (`TEST_DATABASE_URL`),
 ## Testing billing locally with the Stripe CLI
 
 By default (`BILLING_MODE=mock`) no Stripe account is needed: "Upgrade to Pro" opens a local test checkout that
-posts **signed** fake events to `/api/webhooks/stripe`, exercising the real verification and idempotency path.
+creates **signed** fake events and runs them through the webhook's own signature check and idempotent handler.
 
 To test against real Stripe (test mode):
 

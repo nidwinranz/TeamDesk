@@ -42,5 +42,6 @@ event may even arrive concurrently.
 
 - Tests (`tests/integration/billing.test.ts`) prove: replay changes state once; concurrent replays dedupe;
   older events are ignored; canceled is terminal; failures roll back the ledger so retries succeed.
-- `BILLING_MODE=mock` posts signed fake events to the same endpoint, so local dev and E2E exercise the real
-  verification + idempotency path without Stripe credentials.
+- `BILLING_MODE=mock` signs fake events with the webhook secret and passes them through `constructWebhookEvent`
+  and `handleStripeEvent` in-process (no self-HTTP call, which hung on CI runners), so local dev and E2E
+  exercise the real verification + idempotency code without Stripe credentials.

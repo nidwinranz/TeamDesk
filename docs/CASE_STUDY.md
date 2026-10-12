@@ -33,7 +33,8 @@ Stripe delivers webhooks at least once and out of order (ADR 0003). The event id
 `ON CONFLICT DO NOTHING` **inside the same transaction** as its effects: replays are no-ops, concurrent
 duplicates serialize on the row lock, and a crash rolls back the ledger so Stripe's retry is processed.
 `lastEventAt` makes updates monotonic and `canceled` is terminal. A mock mode signs fake events with the real
-webhook secret, so local dev and E2E go through the exact production code path without Stripe keys.
+webhook secret and verifies them with the same code, so local dev and E2E exercise the production verification
+and processing path without Stripe keys.
 
 ### 3. Invariants under concurrency
 
