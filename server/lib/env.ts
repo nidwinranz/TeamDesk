@@ -58,11 +58,12 @@ export type Env = z.infer<typeof schema>;
 
 export function parseEnv(input: Record<string, string | undefined>): Env {
   // `next build` evaluates server modules without runtime secrets; allow opting out there.
+  // Only a production NODE_ENV is relaxed: a test run must keep NODE_ENV=test (in-memory mailer).
   const source =
     input.SKIP_ENV_VALIDATION === '1'
       ? {
           ...input,
-          NODE_ENV: 'development',
+          NODE_ENV: input.NODE_ENV === 'production' ? 'development' : input.NODE_ENV,
           DATABASE_URL: input.DATABASE_URL ?? 'postgresql://build',
         }
       : input;

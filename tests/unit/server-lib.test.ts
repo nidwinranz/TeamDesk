@@ -50,6 +50,9 @@ describe('env', () => {
     expect(parseEnv({ SKIP_ENV_VALIDATION: '1', NODE_ENV: 'production' })).toMatchObject({
       NODE_ENV: 'development',
     });
+    expect(parseEnv({ SKIP_ENV_VALIDATION: '1', NODE_ENV: 'test' })).toMatchObject({
+      NODE_ENV: 'test',
+    });
     expect(() => parseEnv({})).toThrow(/DATABASE_URL/);
   });
 });
