@@ -1,0 +1,26 @@
+name: Reset demo
+
+# Nightly reset of the public demo database. Requires the `DEMO_DATABASE_URL` repository secret
+# (the demo deployment's direct Postgres URL). Does nothing useful until that secret exists.
+on:
+  schedule:
+    - cron: '17 3 * * *'
+  workflow_dispatch:
+
+jobs:
+  reset:
+    runs-on: ubuntu-latest
+    if: ${{ vars.DEMO_ENABLED == 'true' }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm demo:reset
+        env:
+          DEMO_MODE: 'true'
+          DATABASE_URL: ${{ secrets.DEMO_DATABASE_URL }}
+          DIRECT_DATABASE_URL: ${{ secrets.DEMO_DATABASE_URL }}
